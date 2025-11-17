@@ -1,0 +1,120 @@
+<!-- views/pages/client/milestones-all.ejs -->
+<div class="max-w-6xl mx-auto bg-white rounded-lg shadow p-6 mt-10">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-green-700">⏱ All Milestones</h2>
+    <a href="/client/post-project" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">➕ New Project</a>
+  </div>
+
+  <% if (!milestones?.length) { %>
+    <div class="text-center text-gray-500 py-10">No milestones found.</div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-green-700 text-white">
+          <tr>
+            <th class="p-3 text-left">Project</th>
+            <th class="p-3 text-left">Milestone</th>
+            <th class="p-3 text-center">Amount (₹)</th>
+            <th class="p-3 text-center">Due</th>
+            <th class="p-3 text-center">Status</th>
+            <th class="p-3 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% milestones.forEach(m => { %>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-3"><%= m.project?.title || "—" %></td>
+              <td class="p-3"><%= m.title %></td>
+              <td class="p-3 text-center">₹<%= m.amount %></td>
+              <td class="p-3 text-center"><%= m.dueDate ? new Date(m.dueDate).toLocaleDateString() : "—" %></td>
+              <td class="p-3 text-center"><%= m.status %></td>
+              <td class="p-3 text-center space-x-2">
+                <% if (m.status === 'created') { %>
+                  <button class="fundBtn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+                          data-id="<%= m._id %>" data-amount="<%= m.amount %>">💳 Fund</button>
+                <% } %>
+                <% if (['submitted','under-review'].includes(m.status)) { %>
+                  <button class="releaseBtn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+                          data-id="<%= m._id %>">✅ Release</button>
+                  <button class="reviseBtn bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs"
+                          data-id="<%= m._id %>">✏️ Revision</button>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+const RZP_KEY = "<%= razorpayKey || '' %>";
+
+document.querySelectorAll(".fundBtn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const milestoneId = btn.dataset.id;
+    const amount = Number(btn.dataset.amount);
+    if (!RZP_KEY) return Swal.fire("❌ Missing Key","Set RAZORPAY_KEY_ID","error");
+
+    const orderRes = await fetch("/payment/create-order",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ milestoneId, amount })
+    });
+    const orderData = await orderRes.json();
+    if (!orderData.success) return Swal.fire("❌ Error", orderData.message || "", "error");
+
+    new Razorpay({
+      key: RZP_KEY,
+      amount: orderData.order.amount,
+      currency: "INR",
+      name: "Freelancer Marketplace",
+      description: "Milestone Funding",
+      order_id: orderData.order.id,
+      handler: async function (resp) {
+        const verifyRes = await fetch("/payment/verify",{
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({
+            razorpay_payment_id: resp.razorpay_payment_id,
+            razorpay_order_id: resp.razorpay_order_id,
+            razorpay_signature: resp.razorpay_signature,
+            milestoneId, amount
+          })
+        });
+        const verifyData = await verifyRes.json();
+        Swal.fire(verifyData.success ? "✅ Funded":"❌ Error", verifyData.message, verifyData.success?"success":"error")
+          .then(()=> verifyData.success && location.reload());
+      }
+    }).open();
+  });
+});
+
+document.querySelectorAll(".releaseBtn").forEach(btn=>{
+  btn.addEventListener("click", async ()=>{
+    const id = btn.dataset.id;
+    const ok = await Swal.fire({title:"Release?", icon:"question", showCancelButton:true});
+    if(!ok.isConfirmed) return;
+    const res = await fetch(`/milestone/${id}/release`, { method:"POST" });
+    const data = await res.json();
+    Swal.fire(data.success?"✅ Released":"❌ Error", data.message||"", data.success?"success":"error")
+      .then(()=> data.success && location.reload());
+  });
+});
+
+document.querySelectorAll(".reviseBtn").forEach(btn=>{
+  btn.addEventListener("click", async ()=>{
+    const id = btn.dataset.id;
+    const { value: note } = await Swal.fire({title:"Request Revision", input:"textarea", showCancelButton:true});
+    if(!note) return;
+    const res = await fetch(`/milestone/${id}/request-revision`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ note })
+    });
+    const data = await res.json();
+    Swal.fire(data.success?"✏️ Requested":"❌ Error", data.message||"", data.success?"success":"error")
+      .then(()=> data.success && location.reload());
+  });
+});
+</script>

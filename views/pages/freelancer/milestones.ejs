@@ -1,0 +1,140 @@
+<!-- views/pages/freelancer/milestones.ejs -->
+<div class="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-md mt-10">
+  <h2 class="text-3xl font-bold text-green-700 mb-6">🧩 My Milestones</h2>
+
+  <% if (!milestones.length) { %>
+    <p class="text-center text-gray-500 py-10">You have no milestones yet.</p>
+  <% } %>
+
+  <div class="space-y-5">
+    <% milestones.forEach(m => { %>
+      <div class="border p-5 rounded-lg shadow-sm hover:shadow-md transition bg-gray-50">
+
+        <!-- ✅ Milestone Header -->
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-xl font-semibold text-gray-800"><%= m.title %></h3>
+
+          <span class="px-3 py-1 rounded-full text-xs font-bold
+            <%= m.status === 'created' ? 'bg-gray-200 text-gray-700' :
+                m.status === 'funded' ? 'bg-blue-100 text-blue-700' :
+                m.status === 'in-progress' ? 'bg-yellow-100 text-yellow-700' :
+                m.status === 'submitted' ? 'bg-purple-100 text-purple-700' :
+                m.status === 'revision-requested' ? 'bg-red-100 text-red-700' :
+                m.status === 'released' ? 'bg-green-100 text-green-700' :
+                m.status === 'completed' ? 'bg-green-200 text-green-800' :
+                'bg-gray-100 text-gray-600' %>">
+            <%= m.status %>
+          </span>
+        </div>
+
+        <!-- ✅ Body -->
+        <p class="text-gray-700"><%= m.description || "No description" %></p>
+
+        <p class="text-sm text-gray-500 mt-2">
+          💰 Amount: <b>₹<%= m.amount %></b><br>
+          📅 Due: <%= m.dueDate ? new Date(m.dueDate).toLocaleDateString() : "No due date" %>
+        </p>
+
+        <!-- ✅ ESCROW STATUS -->
+        <div class="mt-4 p-3 rounded border bg-white">
+          <h4 class="font-semibold text-gray-700 mb-2">💳 Escrow Status</h4>
+
+          <% if (m.status === "created") { %>
+            <p class="text-yellow-700 font-semibold">⏳ Awaiting Client Funding</p>
+          <% } %>
+
+          <% if (m.escrowPaymentId && m.status !== "released") { %>
+            <p class="text-blue-700 font-semibold">✅ Funded by Client</p>
+            <p class="text-sm text-gray-600">Escrow ID: <%= m.escrowPaymentId %></p>
+          <% } %>
+
+          <% if (m.status === "released") { %>
+            <p class="text-green-700 font-bold">💸 Payment Released</p>
+            <p class="text-xs text-gray-600">
+              Released at: <%= m.releasedAt ? new Date(m.releasedAt).toLocaleString() : "" %>
+            </p>
+          <% } %>
+
+          <% if (m.status === "completed") { %>
+            <p class="text-green-800 font-bold">✅ Completed & Paid</p>
+          <% } %>
+        </div>
+
+        <!-- ✅ Display Deliverables -->
+        <% if (m.deliverables && m.deliverables.length > 0) { %>
+          <div class="mt-4">
+            <h4 class="font-semibold text-sm text-gray-700">📎 Submitted Files:</h4>
+            <% m.deliverables.forEach(f => { %>
+              <a href="<%= f %>" target="_blank" class="text-blue-600 text-sm block underline">
+                <%= f.split('/').pop() %>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <!-- ✅ Action Buttons -->
+        <div class="flex flex-wrap gap-3 mt-5">
+
+          <% if (m.status === "funded") { %>
+            <button 
+              class="start-work-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              data-id="<%= m._id %>">
+              ▶️ Start Work
+            </button>
+          <% } %>
+
+          <% if (m.status === "in-progress") { %>
+            <button 
+              class="open-submit-btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              data-id="<%= m._id %>">
+              📤 Submit Work
+            </button>
+          <% } %>
+
+          <% if (m.status === "revision-requested") { %>
+            <button 
+              class="resume-work-btn bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded"
+              data-id="<%= m._id %>">
+              🛠 Resume After Revision
+            </button>
+          <% } %>
+
+          <% if (m.status === "submitted") { %>
+            <span class="text-purple-700 font-semibold">⏳ Waiting for client review…</span>
+          <% } %>
+
+          <% if (m.status === "completed") { %>
+            <span class="text-green-700 font-semibold">✅ Completed</span>
+          <% } %>
+
+        </div>
+
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<!-- ✅ SUBMIT MODAL -->
+<div id="submitModal" 
+     class="fixed inset-0 bg-black bg-opacity-40 hidden flex items-center justify-center z-50">
+
+  <div class="bg-white shadow-lg p-6 rounded-lg w-96">
+    <h3 class="text-xl font-semibold mb-4 text-gray-800">📤 Submit Deliverables</h3>
+
+    <input type="file" id="submitFiles" multiple class="border p-2 w-full rounded mb-3">
+
+    <button id="submitWorkBtn"
+      class="bg-green-600 hover:bg-green-700 w-full text-white py-2 rounded">
+      ✅ Upload & Submit
+    </button>
+
+    <button onclick="closeSubmitModal()"
+      class="mt-3 w-full bg-gray-300 hover:bg-gray-400 py-2 rounded">
+      Cancel
+    </button>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/freelancer/milestones.js"></script>

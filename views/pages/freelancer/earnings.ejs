@@ -1,0 +1,141 @@
+<!-- views/pages/freelancer/earnings.ejs -->
+<div class="max-w-6xl mx-auto p-6">
+  <h2 class="text-3xl font-bold text-blue-700 mb-6">💰 My Earnings & Wallet</h2>
+
+  <!-- Wallet Summary -->
+  <div class="bg-white shadow rounded-xl p-6 mb-6">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">👛 Wallet Balance</h3>
+    <div class="flex items-center justify-between">
+      <div class="text-4xl font-bold text-green-600">₹<%= wallet.balance.toFixed(2) %></div>
+
+      <button
+        id="withdrawBtn"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm"
+      >
+        💸 Request Withdrawal
+      </button>
+    </div>
+  </div>
+
+  <!-- Transactions -->
+  <div class="bg-white shadow rounded-xl p-6">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">📜 Transaction History</h3>
+
+    <% if (transactions && transactions.length) { %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm border">
+          <thead class="bg-gray-100 text-gray-700">
+            <tr>
+              <th class="p-3 text-left">Type</th>
+              <th class="p-3 text-left">Amount</th>
+              <th class="p-3 text-left">Reference</th>
+              <th class="p-3 text-center">Status</th>
+              <th class="p-3 text-center">Date</th>
+              <th class="p-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% transactions.forEach(t => { %>
+              <tr class="border-t hover:bg-gray-50" data-id="<%= t._id %>">
+                <td class="p-3 capitalize font-semibold"><%= t.type %></td>
+                <td class="p-3">
+                  <strong class="<%= t.type === 'credit' ? 'text-green-600' : 'text-red-600' %>">
+                    ₹<%= t.amount %>
+                  </strong>
+                </td>
+                <td class="p-3 text-gray-600"><%= t.reference || '-' %></td>
+                <td class="p-3 text-center">
+                  <span class="px-2 py-1 rounded-full text-xs font-semibold
+                    <%= t.status === 'completed'
+                        ? 'bg-green-100 text-green-700'
+                        : t.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-red-100 text-red-700' %>">
+                    <%= t.status %>
+                  </span>
+                </td>
+                <td class="p-3 text-center"><%= new Date(t.createdAt).toLocaleString() %></td>
+                <td class="p-3 text-center">
+                  <button
+                    class="detailsBtn bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-xs"
+                  >
+                    🔍 Details
+                  </button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="text-center text-gray-600 py-6">No transactions yet.</div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ✅ Store transactions safely as JSON -->
+<script id="transactionsData" type="application/json">
+  <%- JSON.stringify(transactions) %>
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// ✅ Parse transactions safely
+const TRANSACTIONS = JSON.parse(document.getElementById("transactionsData").textContent);
+
+// ✅ Withdrawal Request
+document.getElementById("withdrawBtn").addEventListener("click", async () => {
+  const { value: amount } = await Swal.fire({
+    title: "💸 Request Withdrawal",
+    input: "number",
+    inputPlaceholder: "Enter amount",
+    showCancelButton: true,
+    confirmButtonText: "Request"
+  });
+
+  if (!amount) return;
+
+  Swal.fire({ title: "Processing...", didOpen: () => Swal.showLoading() });
+
+  const res = await fetch("/freelancer/wallet/request-withdraw", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount })
+  });
+
+  const data = await res.json();
+  Swal.close();
+
+  Swal.fire(
+    data.success ? "✅ Request Sent" : "❌ Error",
+    data.message,
+    data.success ? "success" : "error"
+  );
+
+  if (data.success) setTimeout(() => location.reload(), 1000);
+});
+
+// ✅ View Transaction Details
+document.querySelectorAll(".detailsBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id = btn.closest("tr").dataset.id;
+    const t = TRANSACTIONS.find(tx => tx._id === id);
+    if (!t) return;
+
+    Swal.fire({
+      title: "🔍 Transaction Details",
+      html: `
+        <div class="text-left text-sm">
+          <p><strong>Type:</strong> ${t.type}</p>
+          <p><strong>Amount:</strong> ₹${t.amount}</p>
+          <p><strong>Status:</strong> ${t.status}</p>
+          <p><strong>Reference:</strong> ${t.reference || '-'}</p>
+          <p><strong>Date:</strong> ${new Date(t.createdAt).toLocaleString()}</p>
+        </div>
+      `,
+      confirmButtonText: "Close"
+    });
+  });
+});
+</script>

@@ -1,0 +1,64 @@
+<!-- views/pages/admin/disputes.ejs -->
+<div class="max-w-7xl mx-auto p-6 mt-10 bg-white shadow rounded-xl">
+
+  <h2 class="text-3xl font-bold text-green-700 mb-6">⚠️ Dispute Management</h2>
+
+  <!-- AJAX Container -->
+  <div id="disputeTable">
+    <%- include("../admin/partials/disputes-table.ejs", { disputes, pagination }) %>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div id="disputeModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+  <div class="w-96 bg-white p-6 rounded shadow-lg">
+    <h3 class="text-xl font-semibold text-gray-800 mb-3">Dispute Details</h3>
+
+    <div id="modalContent" class="text-sm text-gray-700"></div>
+
+    <h4 class="mt-4 mb-1 text-gray-800 font-semibold">Admin Action</h4>
+
+    <select id="resolutionSelect" class="w-full border p-2 rounded">
+      <option value="refund-client">Refund to Client</option>
+      <option value="release-freelancer">Release to Freelancer</option>
+      <option value="need-info">Request More Info</option>
+    </select>
+
+    <textarea id="adminNote" class="border p-2 rounded w-full mt-2" placeholder="Admin note (optional)"></textarea>
+
+    <div class="flex justify-between mt-4">
+      <button onclick="closeDisputeModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">
+        Close
+      </button>
+
+      <button id="submitResolution" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+        Submit
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/admin/disputes.js"></script>
+
+<script>
+// -----------------------------
+// AJAX Pagination Handler
+// -----------------------------
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("pagination-btn")) {
+    const page = e.target.dataset.page;
+    loadDisputePage(page);
+  }
+});
+
+async function loadDisputePage(page = 1) {
+  const res = await fetch(`/admin/disputes?page=${page}`, {
+    headers: { "X-Requested-With": "XMLHttpRequest" }
+  });
+
+  const data = await res.json();
+  document.getElementById("disputeTable").innerHTML = data.html;
+}
+</script>

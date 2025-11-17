@@ -1,0 +1,66 @@
+<% if (disputes.length === 0) { %>
+
+  <p class="text-gray-600 text-center py-10">No disputes found.</p>
+
+<% } else { %>
+
+  <table class="min-w-full border text-sm bg-white rounded-xl shadow">
+    <thead class="bg-green-700 text-white">
+      <tr>
+        <th class="p-3 text-left">Milestone</th>
+        <th class="p-3 text-left">Client</th>
+        <th class="p-3 text-left">Reason</th>
+        <th class="p-3 text-left">Status</th>
+        <th class="p-3 text-center">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% disputes.forEach(d => { %>
+        <tr class="border-b hover:bg-gray-50 transition">
+          <td class="p-3"><%= d.milestone?.title || "N/A" %></td>
+          <td class="p-3"><%= d.raisedBy?.fullName || "User" %></td>
+          <td class="p-3"><%= d.reason.substring(0, 40) %>...</td>
+
+          <td class="p-3">
+            <span class="px-2 py-1 rounded text-xs 
+              <%= d.status === 'open'
+                    ? 'bg-red-200 text-red-800'
+                    : d.status === 'under-review'
+                    ? 'bg-yellow-200 text-yellow-800'
+                    : 'bg-green-200 text-green-800'
+              %>">
+              <%= d.status %>
+            </span>
+          </td>
+
+          <td class="p-3 text-center">
+            <button 
+              class="viewDispute bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+              data-id="<%= d._id %>">
+              🔍 View
+            </button>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- PAGINATION BUTTONS -->
+  <div class="flex justify-center mt-6 gap-2">
+
+    <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+      <button 
+        class="pagination-btn px-3 py-1 border rounded 
+          <%= i === pagination.page
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-gray-100 hover:bg-gray-200 border-gray-300'
+          %>"
+        data-page="<%= i %>">
+        <%= i %>
+      </button>
+    <% } %>
+
+  </div>
+
+<% } %>

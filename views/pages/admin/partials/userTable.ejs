@@ -1,0 +1,40 @@
+<tbody>
+  <% if (users.length === 0) { %>
+    <tr>
+      <td colspan="6" class="text-center text-gray-500 py-4">No users found.</td>
+    </tr>
+  <% } else { %>
+    <% users.forEach(user => { %>
+      <tr class="border-b hover:bg-gray-50">
+        <td class="p-2"><%= user.fullName %></td>
+        <td class="p-2"><%= user.email %></td>
+        <td class="p-2 capitalize"><%= user.role %></td>
+        <td class="p-2">
+          <span class="<%= user.status === 'active' ? 'text-green-600' : 'text-yellow-600' %> font-semibold">
+            <%= user.status %>
+          </span>
+        </td>
+        <td class="p-2 text-center"><%= user.isVerified ? "✅" : "❌" %></td>
+
+        <td class="p-2 text-center space-y-1">
+          <% if (!user.isVerified) { %>
+            <button class="btn-approve bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded w-full"
+                    data-id="<%= user._id %>">Approve</button>
+          <% } %>
+
+          <button class="btn-suspend bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded w-full"
+                  data-id="<%= user._id %>">Suspend</button>
+
+          <button class="btn-reset bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded w-full"
+                  data-id="<%= user._id %>">Reset Password</button>
+
+          <button class="btn-verify bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded w-full"
+                  data-id="<%= user._id %>">Verify Identity</button>
+
+          <button class="btn-delete bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded w-full"
+                  data-id="<%= user._id %>">Delete</button>
+        </td>
+      </tr>
+    <% }) %>
+  <% } %>
+</tbody>

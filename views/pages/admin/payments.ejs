@@ -1,0 +1,103 @@
+<!-- views/pages/admin/payments.ejs -->
+<div class="max-w-7xl mx-auto p-6">
+
+  <h2 class="text-2xl font-bold text-green-700 mb-6">💰 Payments & Transactions</h2>
+
+  <!-- =============================== -->
+  <!-- MANUAL PAYOUT SECTION -->
+  <!-- =============================== -->
+  <div class="bg-white rounded-xl shadow p-4 mb-6">
+    <h3 class="font-semibold mb-3">💸 Manual Payout</h3>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <input id="payoutFreelancer" type="text" placeholder="Freelancer ID"
+             class="border rounded px-3 py-2 text-sm w-64">
+
+      <input id="payoutAmount" type="number" placeholder="Amount (₹)"
+             class="border rounded px-3 py-2 text-sm w-40">
+
+      <button id="payoutBtn"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm">
+        Send Payout
+      </button>
+    </div>
+  </div>
+
+  <!-- =============================== -->
+  <!-- AJAX Transaction Table Container -->
+  <!-- =============================== -->
+  <div id="transactionTable">
+    <%- include("../admin/partials/transactions-table.ejs", {
+         transactions: transactions,
+         pagination: pagination
+       }) %>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // ==========================
+  // Manual payout button
+  // ==========================
+  document.getElementById('payoutBtn').addEventListener('click', async () => {
+    const freelancerId = document.getElementById('payoutFreelancer').value.trim();
+    const amount = Number(document.getElementById('payoutAmount').value);
+
+    if (!freelancerId || !amount) {
+      return Swal.fire("Missing info", "Enter Freelancer ID and Amount", "warning");
+    }
+
+    const confirm = await Swal.fire({
+      title: "Confirm Payout",
+      text: `Send ₹${amount}?`,
+      icon: "question",
+      showCancelButton: true
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const res = await fetch("/admin/payments/payout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ freelancerId, amount })
+    });
+
+    const data = await res.json();
+
+    Swal.fire(
+      data.success ? "✅ Payout Sent" : "❌ Error",
+      data.message || "",
+      data.success ? "success" : "error"
+    );
+
+    if (data.success) loadPage(1);
+  });
+
+  // ==========================
+  // AJAX Pagination Handler
+  // ==========================
+  document.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("pagination-btn")) {
+      const page = e.target.dataset.page;
+      loadPage(page);
+    }
+  });
+
+});
+
+// ==========================
+// AJAX FUNCTION: Load a page
+// ==========================
+async function loadPage(page = 1) {
+  const res = await fetch(`/admin/payments?page=${page}`, {
+    headers: { "X-Requested-With": "XMLHttpRequest" }
+  });
+
+  const data = await res.json();
+  document.getElementById("transactionTable").innerHTML = data.html;
+}
+</script>
