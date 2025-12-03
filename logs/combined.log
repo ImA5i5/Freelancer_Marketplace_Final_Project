@@ -5577,3 +5577,9 @@
 [2025-12-02 23:17:27] INFO: ✅ Redis connected
 [2025-12-02 23:17:27] INFO: 🚀 Redis ready
 [2025-12-02 23:17:36] INFO: ✅ MongoDB Connected: ac-ku6mtzf-shard-00-01.qnunwtq.mongodb.net
+[2025-12-02 23:19:24] INFO: 🚀 Server running on http://localhost:5000
+[2025-12-02 23:19:24] INFO: ✅ Redis connected
+[2025-12-02 23:19:24] INFO: 🚀 Redis ready
+[2025-12-02 23:19:33] INFO: ✅ MongoDB Connected: ac-ku6mtzf-shard-00-00.qnunwtq.mongodb.net
+[2025-12-02 23:26:10] INFO: 🚀 Server running on http://localhost:5000
+[2025-12-02 23:26:11] INFO: ✅ MongoDB Connected: ac-ku6mtzf-shard-00-02.qnunwtq.mongodb.net
